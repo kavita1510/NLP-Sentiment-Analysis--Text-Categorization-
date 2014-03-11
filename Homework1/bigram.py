@@ -2,9 +2,11 @@ import string
 import glob
 import os
 
-def test_func(n):
+file_type_list = ['txt_sentoken/pos','txt_sentoken/neg']
+bigram_unknown_dict = {}
+def bigram_dict_from_corpus(n):
     bigram_dict = {}
-    file_type_list = ['txt_sentoken/pos','txt_sentoken/neg']
+    
     for index in range(len(file_type_list)):
         print index
         for fileobj in glob.iglob(os.path.join(file_type_list[index], '*.txt')):
@@ -24,6 +26,22 @@ def test_func(n):
                     else:
                         bigram_dict[ngram_str][index] += 1 
     return bigram_dict            
-               
-        
-print test_func(2)
+
+def bigram_mark_unknown():
+    bigram = bigram_dict_from_corpus(2)
+    
+    for key in bigram:
+        if (bigram[key][0] + bigram[key][1] == 1):
+            if '$$' not in bigram_unknown_dict:
+                bigram_unknown_dict['$$'] = [0,0]
+                bigram_unknown_dict['$$'][0] = bigram[key][0]
+                bigram_unknown_dict['$$'][1] = bigram[key][1]
+            else:
+                bigram_unknown_dict['$$'][0] += bigram[key][0]
+                bigram_unknown_dict['$$'][1] += bigram[key][1]
+        else:
+            bigram_unknown_dict[key] = bigram[key]
+    print bigram_unknown_dict
+bigram_mark_unknown()
+
+
