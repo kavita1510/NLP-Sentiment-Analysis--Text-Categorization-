@@ -1,6 +1,8 @@
 import glob
 import os
 import math
+from unigram import *
+from string import split
 
 class ngram:
     
@@ -79,13 +81,17 @@ class ngram:
                 self.ngram_unknown_dict[key] = self.ngram_dict[key]
         #print self.ngram_unknown_dict
     
-    def calculate_probability(self):
-        vocab = len(self.ngram_unknown_dict)
+    def calculate_probability(self, uni):
+        vocab = len(self.ngram_dict)
         #print "The vocab is of size", vocab;
-        for key in self.ngram_unknown_dict:
-            prob_positive = float(self.ngram_unknown_dict[key][0] + 1.0)/float(self.total_count[0] + vocab)
+        for key in self.ngram_dict:
             
-            prob_negative = float(self.ngram_unknown_dict[key][1] + 1)/float(self.total_count[1] + vocab)
+            uni_of_key = uni[split(key)[0]]
+            #print uni_of_key
+            
+            prob_positive = float(self.ngram_dict[key][0] + 1.0)/float(uni_of_key[0] + vocab)
+            
+            prob_negative = float(self.ngram_dict[key][1] + 1)/float(uni_of_key[1] + vocab)
             self.probability_dict[key] = [math.log(prob_positive), math.log(prob_negative)]
         
     def test_data_categorize(self, n, start, end):
@@ -103,13 +109,12 @@ class ngram:
                     splitted_txt = txt.split()
                     for i in range(len(splitted_txt)-n+1):
                         ngram_str = ' '.join(splitted_txt[i:i+n])
+                        """ Unknown ignored in bigrams"""
                         if ngram_str in self.probability_dict:
                             str_ = ngram_str;
-                        else:
-                            str_ = '$$'
-                        
-                        pos_prob += self.probability_dict[str_][0]
-                        neg_prob += self.probability_dict[str_][1]
+                                                
+                            pos_prob += self.probability_dict[str_][0]
+                            neg_prob += self.probability_dict[str_][1]
                         #print pos_prob, neg_prob
                 #print pos_prob, neg_prob
                 if pos_prob > neg_prob:
@@ -136,11 +141,16 @@ if __name__ == "__main__":
         start = i*200
         end = start + 199
         ng = ngram()
+        u_obj = LM()
+        u_obj.unigrams_presence()
+        """ Unigrams countMap gives frequency """
+        uni = u_obj.countMap
         ng.ngram_dict_from_corpus(n, start, end)
         #print ng.ngram_dict_p
-        ng.ngram_mark_unknown()
-        ng.calculate_probability()
+        #ng.ngram_mark_unknown()
+        ng.calculate_probability(uni)
         print "Text Categorization based on frequency count using bigrams"
         ng.test_data_categorize(n, start, end)
+        
     #print self.probability_dict
    
