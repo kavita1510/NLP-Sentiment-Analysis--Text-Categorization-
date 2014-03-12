@@ -130,6 +130,7 @@ class ngram:
         print "Test data:", start, "-", end
         print "Positives:", success_count[0]," Percent Success:", success_count[0]*100/200.0;
         print "negatives:", success_count[1]," Percent Success:", success_count[1]*100/200.0;
+        print "Average performance:", (success_count[0]*100/200.0 + success_count[1]*100/200.0)/2.0
         print "\n"
         
 
@@ -142,7 +143,7 @@ if __name__ == "__main__":
         end = start + 199
         ng = ngram()
         u_obj = LM()
-        u_obj.unigrams_presence()
+        u_obj.unigrams_presence(start, end)
         """ Unigrams countMap gives frequency """
         uni = u_obj.countMap
         ng.ngram_dict_from_corpus(n, start, end)
