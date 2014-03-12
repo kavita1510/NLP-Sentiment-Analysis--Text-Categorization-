@@ -9,17 +9,22 @@ import math
 class LM:
 
     def __init__(self):
-        self.badWords = ['and', 'the', '.', ',', 'a', 'of','is', 'to', '(', ')', 'it']
+        self.badWords = ['.', ',', '(', ')']
+        """ Vocabulary of all unigram words in the training data """
         self.Unigramdict=[0,0]
+        """ Number of pos and neg files each """
         self.noFiles=1000
+        """ presenceMap ={unigram :[positive file count, negative file count ]  """
         self.presenceMap={}
+        """ countMap ={unigram :[total frequency in pos files, total frequency in neg files ]  """
         self.countMap={}
+        """ Total count of positive and negative unigrams , totalCount= [total pos unigrams, total neg unigrams] """
         self.totalCount=[0,0]
 
 
-    def unigrams_presence(self):
+    def makeUnigramMaps(self):
 
-        """To count the words from all the text files in a directory"""
+        """To make the count and the presence maps from all the text files"""
 
         paths = ['txt_sentoken/pos', 'txt_sentoken/neg']
         #paths = ['test/test1', 'test/test2']
@@ -56,6 +61,7 @@ class LM:
                             self.totalCount[i] += 1
 
     def calculateProbs(self, mapE):
+        """ To make the probability maps of both the presence and counts of the unigrams """
         probMap = {}
         if mapE == self.presenceMap:
             for word in mapE:
@@ -69,7 +75,8 @@ class LM:
 
 
 w1 = LM()
-w1.unigrams_presence()
+w1.makeUnigramMaps()
 print "Count map", w1.countMap
+print   "Count values", w1.totalCount
 print "probMapPresence:", w1.calculateProbs (w1.presenceMap)
 print "probMapCount:", w1.calculateProbs(w1.countMap)
