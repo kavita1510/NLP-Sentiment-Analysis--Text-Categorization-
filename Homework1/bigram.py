@@ -9,10 +9,12 @@ class ngram:
         
         self.ngram_unknown_dict = {}
         self.total_count = [0,0]
+        self.total_count_p = [0,0]
         self.probability_dict = {}
         self.classify_result = {}
         self.ngram_dict = {}
         self.probability_dict_new = {}
+        self.ngram_dict_p = {}
         
         self.badWords = ['.', ',', '(', ')', '\'']
     
@@ -26,10 +28,10 @@ class ngram:
                     continue
                 with open(fileobj, 'r') as f:
                     txt = f.read()
+                    """ For frequency based calculation """
                     splitted_words = txt.split()
-                    
+                    #print type(splitted_words)
                     splitted_txt = [item for item in splitted_words if item not in self.badWords]
-                    
                     for i in range(len(splitted_txt)-n+1):
                         ngram_str = ' '.join(splitted_txt[i:i+n])
                         #print ngram_str
@@ -42,9 +44,29 @@ class ngram:
                         else:
                             self.ngram_dict[ngram_str][index] += 1 
                         self.total_count[index] += 1
-        #return self.ngram_dict  
-        #print j          
-    
+                    
+                    """ For presence based calculations """
+                   
+                    #print txt
+                    splitted_words = txt.split()
+                    #print splitted_words
+                    splitted_txt = [item for item in splitted_words if item not in self.badWords]    
+                    #print splitted_txt              
+                    for i in range(len(splitted_txt)-n+1):
+                        ngram_str = ' '.join(splitted_txt[i:i+n])
+                        #print ngram_str
+                        if ngram_str not in self.ngram_dict_p:
+                            ngram_str_list = [0,0]
+                            self.ngram_dict_p[ngram_str] = ngram_str_list
+                            self.ngram_dict_p[ngram_str][index] += 1
+                            self.total_count_p[index] += 1
+                                                        
+                    if self.ngram_dict_p[ngram_str][index] == 0:
+                        self.total_count_p[index] +=1
+                        self.ngram_dict_p[ngram_str][index] += 1 
+        #print self.ngram_dict_p
+        #print self.total_count_p
+  
     def ngram_mark_unknown(self):
         
         for key in self.ngram_dict:
@@ -57,7 +79,6 @@ class ngram:
                 self.ngram_unknown_dict[key] = self.ngram_dict[key]
         #print self.ngram_unknown_dict
     
-    
     def calculate_probability(self):
         vocab = len(self.ngram_unknown_dict)
         #print "The vocab is of size", vocab;
@@ -67,8 +88,6 @@ class ngram:
             prob_negative = float(self.ngram_unknown_dict[key][1] + 1)/float(self.total_count[1] + vocab)
             self.probability_dict[key] = [math.log(prob_positive), math.log(prob_negative)]
         
-    
-    
     def test_data_categorize(self, n, start, end):
         success_count = [0, 0]
         for index in range(len(self.file_type_list)):
@@ -118,6 +137,7 @@ if __name__ == "__main__":
         end = start + 199
         ng = ngram()
         ng.ngram_dict_from_corpus(n, start, end)
+        #print ng.ngram_dict_p
         ng.ngram_mark_unknown()
         ng.calculate_probability()
         print "Text Categorization based on frequency count using bigrams"
