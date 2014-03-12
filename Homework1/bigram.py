@@ -13,6 +13,8 @@ class ngram:
         self.classify_result = {}
         self.ngram_dict = {}
         self.probability_dict_new = {}
+        
+        self.badWords = ['.', ',', '(', ')', '\'']
     
     def ngram_dict_from_corpus(self, n, start, end):
         for index in range(len(self.file_type_list)):
@@ -24,7 +26,9 @@ class ngram:
                     continue
                 with open(fileobj, 'r') as f:
                     txt = f.read()
-                    splitted_txt = txt.split()
+                    splitted_words = txt.split()
+                    
+                    splitted_txt = [item for item in splitted_words if item not in self.badWords]
                     
                     for i in range(len(splitted_txt)-n+1):
                         ngram_str = ' '.join(splitted_txt[i:i+n])
@@ -34,6 +38,7 @@ class ngram:
                             ngram_str_list[index] += 1
                             
                             self.ngram_dict[ngram_str] = ngram_str_list
+                            
                         else:
                             self.ngram_dict[ngram_str][index] += 1 
                         self.total_count[index] += 1
@@ -96,7 +101,13 @@ class ngram:
                         success_count[index]+=1
                         
                 self.probability_dict_new[fileobj]= [pos_prob,neg_prob] 
-        print success_count
+        
+        
+        print "Test data:", start, "-", end
+        print "Positives:", success_count[0]," Percent Success:", success_count[0]*100/200.0;
+        print "negatives:", success_count[1]," Percent Success:", success_count[1]*100/200.0;
+        print "\n"
+        
 
 
 if __name__ == "__main__":
@@ -109,6 +120,7 @@ if __name__ == "__main__":
         ng.ngram_dict_from_corpus(n, start, end)
         ng.ngram_mark_unknown()
         ng.calculate_probability()
+        print "Text Categorization based on frequency count using bigrams"
         ng.test_data_categorize(n, start, end)
     #print self.probability_dict
    
