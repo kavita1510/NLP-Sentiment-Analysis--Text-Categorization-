@@ -1,12 +1,14 @@
 #from liblinearutil import *
 import glob
 import os
+import re
+import string
 
 
 class LM:
 
     def __init__(self):
-        self.badWords = ['.', ',', '(', ')']
+        self.badWords = ['.', ',', '(', ')','!', '\\','-', '?','+']
         """ Count of all unique +ve and -ve unigram words in the training data """
         self.UnigramVocab=[0,0]
         """ Number of pos and neg files each """
@@ -24,73 +26,86 @@ class LM:
         """ A unigram dict containg all unigrams with their IDS"""
         self.unigramDict = {}
 
-    def makeUnigramMaps(self):
-        """To make the count and the presence maps from all the text files"""
-        #self.paths = ['test/test1', 'test/test2']
-        for i in range(len(self.paths)):
-            for fileobj in glob.iglob(os.path.join(self.paths[i], '*.txt')):
-                with open (fileobj, 'r') as f:
-                    txt = f.read()
-                    unigrams = set(txt.split())
-                    goodUnigrams = [item for item in unigrams if item not in self.badWords]
-                    for unigram in goodUnigrams:
-                        if unigram not in self.presenceMap:
-                            listPresence = [0,0]
-                            listPresence[i] += 1
-                            self.UnigramVocab[i] +=1
-                            self.presenceMap[unigram]=listPresence
-                        else:
-                            listPresence=self.presenceMap[unigram]
-                            if listPresence[i] == 0:
-                                self.UnigramVocab[i] +=1
-                            listPresence[i] += 1
-                            self.presenceMap[unigram]=listPresence
+        self.unigramCountDict={}
+        self.fileDictCount={}
+        self.fileCountArray=[]
 
-                    allUnigrams=txt.split()
-                    allgoodUnigrams=[item for item in allUnigrams if item not in self.badWords]
-                    for unigram in allgoodUnigrams:
-                            if unigram not in self.countMap:
-                                listCount = [0,0]
-                                listCount[i] += 1
-                                self.countMap[unigram] = listCount
-                            else:
-                                listCount = self.countMap[unigram]
-                                listCount[i] += 1
-                                self.countMap[unigram] = listCount
-                            self.totalCount[i] += 1
 
-    def makeSVMdata(self):
-        ID=0
-        f= open('SVMdata.txt', 'a')
-        f.truncate()
+
+    def makeSVMdata(self,start, end, istraining):
+        ID=1
+        print "start",start
+        print "end", end
+        fileName = 'SVMTraindata.txt'
+        fileNameCount = 'SVMTraindataC.txt'
+        if(not istraining):
+            fileName = 'SVMTestdata.txt'
+            fileNameCount = 'SVMTestdataC.txt'
+
+
         for i in range(len(self.paths)):
+            j = -1
+
             for fileobj in glob.iglob(os.path.join(self.paths[i], '*.txt')):
+                j += 1
+                if(not istraining and (j < start or j >  end)):
+                    continue;
+                elif(istraining and (j >= start and j <=  end)):
+                    continue;
                 with open (fileobj, 'r') as f:
                     fileDict={}
+                    fileCountDict={}
                     txt = f.read()
+                    txt.lower()
+                    txt = re.sub('[^a-zA-Z0-9\s]',"", txt)
+
+                    """ Make libSVM format files using unigram presence """
                     unigrams = set(txt.split())
-                    goodUnigrams = [item for item in unigrams if item not in self.badWords]
+                    #goodUnigrams = [item for item in unigrams if item not in self.badWords]
+                    goodUnigrams= unigrams
+
                     for unigram in goodUnigrams:
                         if unigram not in self.unigramDict:
+                            if (not istraining):
+                                continue;
                             self.unigramDict[unigram]=ID
                             ID +=1
                         fileDict[self.unigramDict[unigram]]=1
-                    self.fileArray.append(fileDict)
-                    with open('SVMdata.txt', 'a') as f1:
-                        if i == 0:
-                            f1.write("+1 ")
+                    #self.fileArray.append(fileDict)
+                    outfile= open(fileName, 'a')
+                    print len(fileDict)
+                    #with outfile:
+                    if i == 0:
+                        outfile.write("+1 ")
+                    else:
+                        outfile.write("-1 ")
+                    for wordId in sorted(fileDict.iterkeys()):
+                        outfile.write(str(wordId)+ ":" + str(fileDict[wordId])+ " ")
+                    outfile.write('\n')
+
+                    """ Make libSVM format files using unigram count """
+                    allUnigrams=txt.split()
+                    #allgoodUnigrams=[item for item in allUnigrams if item not in self.badWords]
+                    allgoodUnigrams=allUnigrams
+                    for unigram in allgoodUnigrams:
+                        if unigram not in self.unigramDict:
+                            continue;
+                        if self.unigramDict[unigram] not in fileCountDict.keys():
+                            fileCountDict[self.unigramDict[unigram]] = 1
                         else:
-                            f1.write("-1 ")
-                        for wordId, p in fileDict.items():
-                            f1.write(str(wordId)+ ":1 ")
-                        f1.write('\n')
+                            fileCountDict[self.unigramDict[unigram]] += 1
+                    #self.fileCountArray.append(fileCountDict)
+                    outfile= open(fileNameCount, 'a')
+                    #with outfile:
+                    if i == 0:
+                        outfile.write("+1 ")
+                    else:
+                        outfile.write("-1 ")
+                    for wordId in sorted(fileCountDict.iterkeys()):
+                        outfile.write(str(wordId)+ ":" + str(fileCountDict[wordId])+ " ")
+                    outfile.write('\n')
+
 
 w1=LM()
-w1.makeUnigramMaps()
-print "Print unigram dictionary:", w1.UnigramVocab
-w1.makeSVMdata()
-print "Unigram dictionary:", w1.unigramDict
-# for item in w1.fileArray:
-#     print "->", item
-print "size unigramdict", len(w1.unigramDict)
-
+w1.makeSVMdata(200,399, True)
+w1.makeSVMdata(200,399, False)
