@@ -5,6 +5,7 @@ import os
 import re
 import string
 import math
+import random
 
 class LM:
 
@@ -22,15 +23,17 @@ class LM:
 
 
     def learning_data(self, start, end):
-        def fun(fileobj,i):
-            print 'in fun'
+        
+        def fun(fileobj,i, expected_class):
+            ##print 'in fun'
+            self.f_vector = {}
             with open (fileobj, 'r') as f:
                     txt = f.read()
                     allUnigrams=txt.split()
                     allgoodUnigrams=[item for item in allUnigrams if item not in self.badWords]
                     for unigram in allgoodUnigrams:
                         if unigram not in self.weight_vector :
-                            self.weight_vector[unigram] = 1 
+                            self.weight_vector[unigram] = 0
                             
                         if  unigram not in self.f_vector:
                             self.f_vector[unigram] = 1
@@ -38,24 +41,21 @@ class LM:
                
             """ Manipulating the weight vector as per positive or negative"""
             self.compute = 0
+            #print self.f_vector
+            #print self.weight_vector
             for key in self.f_vector:
                 if key in self.weight_vector:
-                    #print self.weight_vector[key][i]
-                    #print self.f_vector[key][i]
-                    self.compute += self.weight_vector[key]* self.f_vector[key]
-            print self.compute
+                    self.compute += (self.weight_vector[key] * self.f_vector[key])
             
+            self.correction = expected_class - (self.compute*1.0/len(self.f_vector))
+            #print self.compute
+            #print self.correction
+                     
             """ Mistake on positive add to the weight vector """
-            if self.compute < 0 and i == 0:
-                for key in self.f_vector:
-                    if key in self.weight_vector:
-                        self.weight_vector[key] += self.f_vector[key]
-                        
-            elif self.compute > 0 and i == 1:
-                for key in self.f_vector:
-                    if key in self.weight_vector:
-                        self.weight_vector[key] -= self.f_vector[key]
-                        
+            """ if self.compute < 0 and i == 0: """
+            for key in self.weight_vector:
+                if key in self.f_vector:
+                    self.weight_vector[key] += (self.f_vector[key] * self.correction)
       
         j = -1
         posfileobjs = list(glob.iglob(os.path.join(self.paths[0], '*.txt')))
@@ -66,60 +66,48 @@ class LM:
             j +=1
             if (j>=start and j<=end):
                 continue
+            #print j
             self.f_vector = {}
-            fun(negfileobjs[i],1)
+            fun(negfileobjs[i],1, expected_class = -1)
             self.f_vector = {}
-            fun(posfileobjs[i],0)
-
-                        
-    def calculateProbs(self, mapE):
-        
-        """ Computing probabilities of unigrams """
-        
-        if mapE == self.presenceMap:
-            for word in mapE:
-                probList = mapE[word]
-                self.probMap[word] = [math.log(float(probList[0] + 1) / float(self.noFiles + self.Unigramdict[0])),math.log( float(probList[1] + 1)/float (self.noFiles + self.Unigramdict[1]))]
-        if mapE == self.weight_vector:
-            for word in mapE:
-                probList = mapE[word]
-                self.probMap[word] = [math.log(float(probList[0] + 1) / float(self.totalCount[0] + self.Unigramdict[0])),math.log( float(probList[1] + 1)/float (self.totalCount[1] + self.Unigramdict[1]))]
-        
+            fun(posfileobjs[i],0, expected_class = 1)
+    
     
     def test_data_categorize(self,start, end):
         
         """ Categorizing data using reviews """
         success_count = [0, 0]
+        
         for index in range(len(self.paths)):
             j = -1
             for fileobj in glob.iglob(os.path.join(self.paths[index], '*.txt')):
                 j +=1
                 if (j<start or j>end):
                     continue
-                pos_prob = 0
-                neg_prob = 0
-                
+                self.f_vector = {}
                 with open(fileobj, 'r') as f:
                     txt = f.read()
                     allUnigrams=txt.split()
                     allgoodUnigrams=[item for item in allUnigrams if item not in self.badWords]
                     for unigram in allgoodUnigrams:
-                        if unigram not in self.weight_vector :
-                            self.weight_vector[unigram] = 1 
                             
                         if  unigram not in self.f_vector:
                             self.f_vector[unigram] = 1
-                        #print pos_prob, neg_prob
-                #print pos_prob, neg_prob
-                if pos_prob > neg_prob:
-                    if index == 0:
+                    
+                self.compute = 0
+                #print self.weight_vector
+                
+                for key in self.f_vector:
+                    if key in self.weight_vector:
+                        #print self.weight_vector[key], self.f_vector[key]
+                        self.compute += (self.weight_vector[key]* self.f_vector[key])
+                #print self.compute
+                if self.compute > 0 and index == 0:
                         success_count[index]+=1
-                else:
-                    if index == 1:
+                elif self.compute < 0 and index == 1:
                         success_count[index]+=1
                         
-                self.probability_dict_new[fileobj]= [pos_prob,neg_prob] 
-        
+    
         
         print "Test data:", start, "-", end
         print "Positives:", success_count[0]," Percent Success:", success_count[0]*100/200.0
@@ -135,8 +123,10 @@ if __name__ == "__main__":
         start = i*200
         end = start + 199
         u_obj = LM()
-        
+        #print start, end
         u_obj.learning_data(start,end)
+        
         #u_obj.calculateProbs(u_obj.weight_vector)
         #print "Text Categorization based on frequency count using unigrams"
-        #u_obj.test_data_categorize(start, end)
+        #print u_obj.weight_vector
+        u_obj.test_data_categorize(start, end)
