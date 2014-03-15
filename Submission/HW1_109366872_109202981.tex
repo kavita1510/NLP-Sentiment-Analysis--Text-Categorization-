@@ -1,0 +1,317 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% LaTeX Example: Project Report
+%
+% Source: http://www.howtotex.com
+%
+% Feel free to distribute this example, but please keep the referral
+% to howtotex.com
+% Date: March 2011 
+% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% How to use writeLaTeX: 
+%
+% You edit the source code here on the left, and the preview on the
+% right shows you the result within a few seconds.
+%
+% Bookmark this page and share the URL with your co-authors. They can
+% edit at the same time!
+%
+% You can upload figures, bibliographies, custom classes and
+% styles using the files menu.
+%
+% If you're new to LaTeX, the wikibook is a great place to start:
+% http://en.wikibooks.org/wiki/LaTeX
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Edit the title below to update the display in My Documents
+%\title{NLP homework1}
+%
+%%% Preamble
+\documentclass[paper=a4, fontsize=11pt]{scrartcl}
+\usepackage[T1]{fontenc}
+\usepackage{fourier}
+
+\usepackage[english]{babel}															% English language/hyphenation
+\usepackage[protrusion=true,expansion=true]{microtype}	
+\usepackage{amsmath,amsfonts,amsthm} % Math packages
+\usepackage[pdftex]{graphicx}	
+\usepackage{url}
+%\usepackage{hhline}
+\usepackage {multirow}
+\usepackage{multicol}
+\usepackage{float}
+\usepackage{chngcntr}
+
+
+%%% Custom sectioning
+\usepackage{sectsty}
+\allsectionsfont{\normalfont\scshape}
+
+
+%%% Custom headers/footers (fancyhdr package)
+\usepackage{fancyhdr}
+\pagestyle{fancyplain}
+\fancyhead{}											% No page header
+\fancyfoot[L]{}											% Empty 
+\fancyfoot[C]{}											% Empty
+\fancyfoot[R]{\thepage}									% Pagenumbering
+\renewcommand{\headrulewidth}{0pt}			% Remove header underlines
+\renewcommand{\footrulewidth}{0pt}				% Remove footer underlines
+\setlength{\headheight}{13.6pt}
+
+
+%%% Equation and float numbering
+\numberwithin{equation}{section}		% Equationnumbering: section.eq#
+\numberwithin{figure}{section}			% Figurenumbering: section.fig#
+\numberwithin{table}{section}				% Tablenumbering: section.tab#
+
+
+%%% Maketitle metadata
+\newcommand{\horrule}[1]{\rule{\linewidth}{#1}} 	% Horizontal rule
+
+\title{
+		%\vspace{-1in} 	
+		\usefont{OT1}{bch}{b}{n}
+		\normalfont \normalsize \textsc{Stony Brook University} \\ [25pt]
+		\horrule{0.5pt} \\[0.4cm]
+		\huge CSE628: Homework 1 \\
+		\horrule{2pt} \\[0.5cm]
+}
+
+\author{
+Kavita Agarwal\\
+ \and
+Sonal Aggarwal\\
+}
+\date{\small{\today}} 
+
+%%% Begin document
+
+\begin{document}
+\maketitle
+\section{Implement a language model classifier with Laplace smoothing}
+We have build a language model classifier on a movie review dataset. The dataset \footnote{http://www.cs.cornell.edu/people/pabo/-
+movie-review-data} comprises of two classes namely, positive and negative each containing 1000 text files. We performed a five fold cross validation on the dataset with even distribution of the data files.
+
+The features we used were bigrams and unigrams and then the classification accuracy was measured separately on the feature frequency and feature presence in the files. To deal with the unknowns we used Laplace Smoothing that gives the same probability value to all the unknowns.
+
+To calculate the probability of a unigram belonging to a particular class (positive or negative) using feature presence applied with smoothing:
+\begin{equation}
+P(w_1) = \frac{Count \; of \; files \; belonging \; to \; a \; class \; containing \; the \; feature \; + 1}{ Total \; files \; in \; the \; class \; + Vocabulary \; Size}
+\end{equation}
+
+Similarly for feature frequency we used:
+\begin{equation}
+P(w_1) = \frac{Total \; count \; of \;the \; feature \; in \; a \; class \; + 1}{ Total \; feature \; count \; in \; the \; class \; + Vocabulary \; Size}
+\end{equation}
+
+To avoid underflow we use log of probabiliies which also provided the added benefit of being faster.
+
+Table \ref{table:unigram} summarizes the classification success rate for the positve and negative classification of the reviews using unigrams as features and compares the results of Unigram presence vs Unigram Count.
+\newline
+\begin {table}[H]
+\centering
+\begin{tabular}{ |l||c|c|c|c|c|c|}
+\hline
+&\multicolumn{3}{ |c|} {Unigram Presence} & \multicolumn{3}{|c|}{Unigram Count}  \\ \hline
+& Pos & Neg & Avg & Pos & Neg & Avg \\ \hline
+
+\texttt{1st fold} & 59.0 & 92.0 & 75.5 & 77.5 & 83.0 & 80.25 \\ \hline
+\texttt{2nd fold} & 73.0 & 89.0 & 81.0 & 79.0 & 83.0 & 81.0\\ \hline
+\texttt{3rd fold} & 50.5 & 95.5 & 73.0 & 77.5 & 84.5 & 81.0\\ \hline
+\texttt{4th fold} & 62.0 & 95.5 & 78.75 & 80.5 & 85.0 & 82.75\\\hline
+\texttt{5th fold} & 60.5 & 93.5 & 77.0 & 74.5 & 84.5 & 79.5 \\ \hline
+\texttt{Average success rate} & \multicolumn{3}{ |c|} {77.05} & \multicolumn{3}{|c|} {81.3} \\ \hline
+\end{tabular}
+\caption{Classification results using unigrams in \%} 
+\label{table:unigram}
+\end {table}
+
+ 
+Table \ref{table:bigram} summarizes the success rate for the positve and negative classification of the reviews using bigrams.
+\newline
+\begin {table}[H]
+\centering
+\begin{tabular}{ |l||c|c|c|c|c|c|}
+\hline
+& \multicolumn{3}{ |c|} {Bigram Presence} & \multicolumn{3}{|c|}{Bigram Count}  \\ \hline
+& Pos & Neg & Avg & Pos & Neg & Avg \\ \hline
+\texttt{1st fold} & 98.0 & 44.5 & 71.25 & 98.0 & 46.0 & 72.0 \\ \hline
+\texttt{2nd fold} & 96.0 & 50.0 & 73.0 & 95.5 & 51.5 & 73.5\\ \hline
+\texttt{3rd fold} & 99.0 & 51.5 & 75.25 & 96.5 & 53.0 & 74.75\\ \hline
+\texttt{4th fold} & 96.5 & 51.5 & 74.0 & 99.0 & 52.0 & 75.5\\\hline
+\texttt{5th fold} & 99.0 & 51.5 & 74.25 & 96.5 & 52.0 & 74.25\\ \hline
+\texttt{Average success rate} & \multicolumn{3}{|c|} {73.55} & \multicolumn{3}{|c|} {74} \\ \hline
+\end{tabular}
+\caption{Classification results using bigrams in \%} 
+\label{table:bigram}
+\end {table}
+
+\paragraph{\bf Conclusion:}The results demonstrate the superiority of unigrams in movie review classification. One plausible explanation can be the  high specifity of using bigrams which do not give good results on short documents. Also for handling unknowns theoretically unigrams should fare better. Also bigrams give better positive class classification than for negative class wheras for unigrams we get slighly better results for negative class classification for both feature frequency and feature count.
+
+To play with the feature set we can also select a unigram if it occurs more than 3 times in a file to reduce the size of the feature set. 
+
+%============================Perceptron=====================================
+%===========================================================================
+
+\section{Building a Perceptron Classifier}
+
+The second problem was to build a Perceptron Classifier on the same movie review data set. Our approach towards it is listed below:
+\begin {itemize}
+	\item {\bf Weight vector learning:-} Initialized the weight vector to zero. The weight vector is learned from feature vector of the training data set. The correction rate is the difference of expected class and the dot product of feature and weight vector. This correction rate is multiplied with the feature vector and added to the weight vector
+
+\begin{equation}
+Score = WeightVector * FeatureVector
+\end{equation}
+
+\begin{equation}
+Correction = ExpectedClass - \frac{Score}{Total\;no\;of\;words\;in\;feature\;vector}
+\end{equation}
+
+\begin{equation}
+WeightVector =WeightVector + Correction
+\end{equation}
+
+
+	\item  {\bf Text Categorization:-} The learned weight vector is used to classify the new test data. The dot product of Test data feature set and weight vector gives us the classification. If the classification result is positive the test data set belongs to `pos` class else `neg' class. This result is gathered for five fold cross validation and average is computed    
+    \end {itemize}
+
+We used the feature presence for this classification. The feature set used were unigrams and bigrams.
+
+\begin {table}[H]
+\centering
+\begin{tabular}{ |l||c|c|c|}
+\hline
+&\multicolumn{3}{ |c|} {Unigram Presence}  \\ \hline
+& Pos & Neg & Avg \\ \hline
+
+\texttt{1st fold} & 81.0 & 89.0 & 85.0  \\ \hline
+\texttt{2nd fold} & 86.0 & 86.0 & 86.0 \\ \hline
+\texttt{3rd fold} & 83.0 & 89.0 & 86.0 \\ \hline
+\texttt{4th fold} & 87.0 & 90.5 & 88.75\\\hline
+\texttt{5th fold} & 82.5 & 89.5 & 86.0 \\ \hline
+\texttt{Average success rate} & \multicolumn{3}{ |c|} {86.35} \\ \hline
+\end{tabular}
+\caption{Perceptron classification results using unigram presence in \%} 
+\label{table:unigramP}
+\end {table}
+
+\begin {table}[H]
+\centering
+\begin{tabular}{ |l||c|c|c|}
+\hline
+&\multicolumn{3}{ |c|} {Bigram Presence}  \\ \hline
+& Pos & Neg & Avg \\ \hline
+\texttt{1st fold} & 83.5 & 78.0 & 80.75  \\ \hline
+\texttt{2nd fold} & 86.5 & 73.5 & 80.0 \\ \hline
+\texttt{3rd fold} & 83.0 & 77.0 & 80.0 \\ \hline
+\texttt{4th fold} & 90.0 & 70.0 & 80.0\\\hline
+\texttt{5th fold} & 89.5 & 80.5 & 85.0 \\ \hline
+\texttt{Average success rate} & \multicolumn{3}{|c|} {81.15} \\ \hline
+\end{tabular}
+\caption{Perceptron classification results using bigram presence in \%} 
+\label{table:bigramP}
+\end {table}
+
+\paragraph{\bf Conclusion:}We used Unigram Presence and bigram presence features. We ran this classifier for different learning rates 1 and 0.7 and iterations of 1,2 and 10 but did not observe any significant difference in the performance. On the whole unigram surpasses bigram with average performance of $86.35$ and $81.15$ respectively. Here again unigrams were giving better performance as compared to bigrams.
+
+
+
+%======================================================================= 
+%===========================SVM=========================================
+
+\section{Classification using a pre-existing SVM classifier}
+This involved classifying the data set using a SVM classifier which provided a good tool to compare with the results of our language model classifier. We used the LibSVM \footnote{Chang, Chih-Chung, and Chih-Jen Lin. "LIBSVM: a library for support vector machines." ACM Transactions on Intelligent Systems and Technology (TIST) 2.3 (2011): 27.} tool, its Java interface and command line utility for classification.
+
+The approach we followed was:
+\begin {itemize}
+      \item We converted the training data and test data into LibSVM format required by the SVM classifier by using Unigram presence and Unigram count as feature vectors
+	\item Two approaches were followed to run this LIBSVM classifie			       
+	\item LIBSVM utility through command prompt:-
+        \begin{itemize}
+        \item We ran the train\_data\_file generated above on the svn-train.exe which generates a model file
+		\item The test\_file was classified using svm-predict.exe and the model generated above
+		\end{itemize}
+    \item LibSVM Java based interface
+		\begin {itemize}
+    	\item The test\_data and training\_data files as per the required format were run on this
+       	\end {itemize}
+		
+\end{itemize}
+    
+The results for unigram presence are summarized in \ref{table:svm_uniP}.
+\begin {table}[H]
+\centering
+\begin{tabular}{ |l||c|}
+\hline
+&{\bf Classification Accuracy}  \\ \hline
+\texttt{1st fold} & 86.0  \\ \hline
+\texttt{2nd fold} & 85.5 \\ \hline
+\texttt{3rd fold} & 83.5 \\ \hline
+\texttt{4th fold} & 84.75\\\hline
+\texttt{5th fold} & 83.5 \\ \hline
+\texttt{Average success rate} & {\bf 84.65}  \\ \hline
+\end{tabular}
+\caption{SVM classification results using unigram presence in \%} 
+\label{table:svm_uniP}
+\end {table}
+
+The results for unigram frequency are summarized in \ref{table:svm_uniC}.
+\begin {table}[H]
+\centering
+\begin{tabular}{ |l||c|}
+\hline
+&{\bf Classification Accuracy}  \\ \hline
+\texttt{1st fold} & 84.5  \\ \hline
+\texttt{2nd fold} & 79.25 \\ \hline
+\texttt{3rd fold} & 82.25 \\ \hline
+\texttt{4th fold} & 84.5\\\hline
+\texttt{5th fold} & 85.75 \\ \hline
+\texttt{Average success rate} & {\bf 83.25}  \\ \hline
+\end{tabular}
+\caption{SVM classification results using unigram count in \%} 
+\label{table:svm_uniC}
+\end {table}
+ 
+\paragraph{Conclusion:}
+\begin{itemize}
+\item The classifier was run for different cost factors 20, 30, 50,100 and 110 but the performance over different runs remained almost same over the two approaches.
+\item LibSVM utility through command prompt:-
+	\begin{itemize}
+    \item Unigram Presence gave an average performance of 67\%
+	\item Unigram Count gave an average performance of 60\%
+	\item One reason which we think attributes to low performance in this case is the windows DLL required by the LibSVM command line utility which might be influencing the classifier because of some inner architecture based dependencies of Windows.
+	\end{itemize}
+\item LIBSVM Java based interface :-
+	\begin{itemize}
+	\item When the same files were run in java ( which does not require any platform related DLLs) the performance shoots up to 86\%
+	\end{itemize}
+    \item We could not set the regularization parameters for LibSVM classifier.
+\end{itemize}
+
+\section* {\bf Error Analysis:} We found the common files which were wrongly classified by the perceptron classifier and the language model classifer. Then we saw the corresponding training data set for both of them and came to the conclusion that the files which belong to positive class and are wrongly classified as negative class have words in training data set which belong to negative class and vice versa.
+
+\begin {table}[H]
+\centering
+\begin{tabular}{ |l||c|c|}
+\hline
+{\bf Filename} & {\bf Actual Class} & {\bf Classification}  \\ \hline
+\texttt{\textbackslash cv034\_29647.txt} & positive & negative \\ \hline
+\texttt{\textbackslash cv040\_8276.txt}  & positive & negative \\ \hline
+\texttt{\textbackslash cv060\_11754.txt} & negative & positive \\ \hline
+\texttt{\textbackslash cv104\_19176.txt} & negative & positive \\ \hline
+\end{tabular}
+\caption{Wrong classification of files} 
+\label{table:Wrong}
+\end {table}
+
+
+\section* {\bf Inference:}
+Given the success rates of the the classifiers used by us, we obtained the best classification accuracy by the {\bf Perceptron Classifier} using unigram presence. 
+
+The reason for this might be the alternative class learning approach we followed while learning the weight vector instead of learning one entire class at a time.
+
+
+
+%%% End document
+\end{document}
