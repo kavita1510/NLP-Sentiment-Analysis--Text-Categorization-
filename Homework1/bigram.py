@@ -73,9 +73,7 @@ class ngram:
                     """if self.ngram_dict_p[ngram_str][index] == 0:
                         self.total_count_p[index] +=1
                         self.ngram_dict_p[ngram_str][index] += 1 """ 
-        #print self.ngram_dict_p
-        #print self.total_count_p
-  
+
     def ngram_mark_unknown(self):
         
         for key in self.ngram_dict:
@@ -135,6 +133,7 @@ class ngram:
                 else:
                     if index == 1:
                         success_count[index]+=1
+                
                         
                 self.probability_dict_new[fileobj]= [pos_prob,neg_prob] 
         
@@ -160,12 +159,12 @@ if __name__ == "__main__":
         
         """ Unigrams countMap gives frequency """
         uni = u_obj.countMap
-        #ng.ngram_dict_from_corpus(n, start, end)
+        ng.ngram_dict_from_corpus(n, start, end)
         
         """ Count based probability calculations """
-        #ng.calculate_probability_count(uni)
-        #print "Text Categorization based on frequency count using bigrams"
-        #ng.test_data_categorize(n, start, end)
+        ng.calculate_probability_count(uni)
+        print "Text Categorization based on frequency count using bigrams"
+        ng.test_data_categorize(n, start, end)
         
     u_obj.probability_dict= {} 
            
