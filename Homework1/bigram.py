@@ -17,6 +17,8 @@ class ngram:
         self.ngram_dict = {}
         self.probability_dict_new = {}
         self.ngram_dict_p = {}
+        self.dict_prob = {}
+        self.noFiles=1000
         
         self.badWords = ['.', ',', '(', ')', '\'']
     
@@ -48,24 +50,29 @@ class ngram:
                         self.total_count[index] += 1
                     
                     """ For presence based calculations """
-                   
-                    #print txt
+
                     splitted_words = txt.split()
-                    #print splitted_words
                     splitted_txt = [item for item in splitted_words if item not in self.badWords]    
-                    #print splitted_txt              
+                              
                     for i in range(len(splitted_txt)-n+1):
                         ngram_str = ' '.join(splitted_txt[i:i+n])
                         #print ngram_str
+                       
                         if ngram_str not in self.ngram_dict_p:
                             ngram_str_list = [0,0]
                             self.ngram_dict_p[ngram_str] = ngram_str_list
                             self.ngram_dict_p[ngram_str][index] += 1
                             self.total_count_p[index] += 1
+                        else:
+                            ngram_str_list = self.ngram_dict_p[ngram_str]
+                            if ngram_str_list[index] == 0:
+                                self.total_count_p[index] +=1
+                            ngram_str_list[index] +=1
+                            self.ngram_dict_p[ngram_str] = ngram_str_list
                                                         
-                    if self.ngram_dict_p[ngram_str][index] == 0:
+                    """if self.ngram_dict_p[ngram_str][index] == 0:
                         self.total_count_p[index] +=1
-                        self.ngram_dict_p[ngram_str][index] += 1 
+                        self.ngram_dict_p[ngram_str][index] += 1 """ 
         #print self.ngram_dict_p
         #print self.total_count_p
   
@@ -81,17 +88,22 @@ class ngram:
                 self.ngram_unknown_dict[key] = self.ngram_dict[key]
         #print self.ngram_unknown_dict
     
-    def calculate_probability(self, uni):
+    def calculate_probability_count(self, uni):
+
         vocab = len(self.ngram_dict)
-        #print "The vocab is of size", vocab;
-        for key in self.ngram_dict:
-            
-            uni_of_key = uni[split(key)[0]]
-            #print uni_of_key
-            
+        for key in self.ngram_dict:     
+            uni_of_key = uni[split(key)[0]]     
             prob_positive = float(self.ngram_dict[key][0] + 1.0)/float(uni_of_key[0] + vocab)
-            
             prob_negative = float(self.ngram_dict[key][1] + 1)/float(uni_of_key[1] + vocab)
+            self.probability_dict[key] = [math.log(prob_positive), math.log(prob_negative)]
+            
+    def calculate_probability_presence(self, uni):
+        
+        vocab = len(self.ngram_dict_p)
+        for key in self.ngram_dict_p:     
+            uni_of_key = uni[split(key)[0]]     
+            prob_positive = float(self.ngram_dict_p[key][0] + 1.0)/float(self.noFiles + vocab)
+            prob_negative = float(self.ngram_dict_p[key][1] + 1)/float(self.noFiles + vocab)
             self.probability_dict[key] = [math.log(prob_positive), math.log(prob_negative)]
         
     def test_data_categorize(self, n, start, end):
@@ -137,6 +149,7 @@ class ngram:
 
 if __name__ == "__main__":
     n = 2;
+    
     for i in range(0,5):
     # One test case
         start = i*200
@@ -144,14 +157,34 @@ if __name__ == "__main__":
         ng = ngram()
         u_obj = LM()
         u_obj.unigrams_presence(start, end)
+        
         """ Unigrams countMap gives frequency """
         uni = u_obj.countMap
+        #ng.ngram_dict_from_corpus(n, start, end)
+        
+        """ Count based probability calculations """
+        #ng.calculate_probability_count(uni)
+        #print "Text Categorization based on frequency count using bigrams"
+        #ng.test_data_categorize(n, start, end)
+        
+    u_obj.probability_dict= {} 
+           
+    for i in range(0,5):
+        start = i*200
+        end = start + 199
+        ng = ngram()
+        u_obj = LM()
+        uni = {}
+        u_obj.unigrams_presence(start, end)
+        """ Unigrams countMap gives frequency """
+        uni = u_obj.presenceMap
         ng.ngram_dict_from_corpus(n, start, end)
-        #print ng.ngram_dict_p
-        #ng.ngram_mark_unknown()
-        ng.calculate_probability(uni)
-        print "Text Categorization based on frequency count using bigrams"
+        
+        """ Presence based probability calculations """
+        ng.calculate_probability_presence(uni)
+        print "Text Categorization based on presence count using bigrams"
         ng.test_data_categorize(n, start, end)
+
         
     #print self.probability_dict
    
